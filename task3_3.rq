@@ -1,0 +1,53 @@
+# Перший варіант запиту
+#PREFIX dbo: <http://dbpedia.org/ontology/>
+#PREFIX dbr: <http://dbpedia.org/resource/>
+#PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+#PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+#PREFIX yago: <http://dbpedia.org/class/yago/>
+#
+#SELECT DISTINCT ?name ?birthCountry ?uniCountry
+#WHERE {
+#  ?name rdf:type dbo:Scientist ;
+#          dbo:award dbr:Nobel_Prize_in_Physics .
+#
+#  ?name dbo:birthPlace/dbo:country ?birthCountry .
+#  ?name dbo:almaMater/dbo:country ?uniCountry .
+#
+#  FILTER(?birthCountry != ?uniCountry)
+#}
+
+# Фінальний (покращений) варіант запиту
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?name (MIN(?birthName) as ?birth) (MIN(?uniName) as ?uni)
+WHERE {
+  ?scientist rdf:type dbo:Scientist ;
+          dbo:award dbr:Nobel_Prize_in_Physics .
+
+  ?scientist dbo:birthPlace/dbo:country ?birthCountry .
+  ?scientist dbo:almaMater/dbo:country ?uniCountry .
+
+  OPTIONAL {
+    ?scientist rdfs:label ?label .
+    FILTER(LANG(?label) = 'en')
+  }
+  OPTIONAL {
+    ?birthCountry rdfs:label ?birthLabel .
+    FILTER(LANG(?birthLabel) = 'en')
+  }
+  OPTIONAL {
+    ?uniCountry rdfs:label ?uniLabel .
+    FILTER(LANG(?uniLabel) = 'en')
+  }
+
+  BIND(COALESCE(?label, REPLACE(STR(?scientist), "^.*/", "")) as ?name)
+  BIND(COALESCE(?birthLabel, REPLACE(STR(?birthCountry), "^.*/", "")) as ?birthName)
+  BIND(COALESCE(?uniLabel, REPLACE(STR(?uniCountry), "^.*/", "")) as ?uniName)
+
+  FILTER(?birthCountry != ?uniCountry)
+}
+GROUP BY ?name
+ORDER BY ?name

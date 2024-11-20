@@ -1,0 +1,61 @@
+# Перший варіант, немає мови у Австрії та Андори, а у всіх інших лише по одній
+#PREFIX dbo: <http://dbpedia.org/ontology/>
+#PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+#PREFIX dct: <http://purl.org/dc/terms/>
+#PREFIX cat: <http://dbpedia.org/resource/Category:>
+#
+#SELECT DISTINCT ?name (GROUP_CONCAT(DISTINCT UCASE(?langLabel); separator="|") as ?languages)
+#WHERE {
+#    ?country a dbo:Country ;
+#             rdfs:label ?name .
+#    {
+#        ?country dct:subject cat:Countries_in_Europe
+#    } UNION {
+#        ?country dct:subject cat:Countries_in_North_America
+#    }
+#
+#    OPTIONAL {
+#        ?country dbo:officialLanguage ?lang .
+#        ?lang rdfs:label ?langLabel .
+#        FILTER(LANG(?langLabel) = "en")
+#    }
+#
+#    FILTER(LANG(?name) = "en" && STRSTARTS(LCASE(?name), "a"))
+#}
+#GROUP BY ?name
+#ORDER BY ?name
+
+# Фінальний запит, де у країн по декілька мов, а немає її тільки в Андори
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbp: <http://dbpedia.org/property/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+SELECT DISTINCT ?name (GROUP_CONCAT(DISTINCT UCASE(?langLabel); separator="|") as ?languages)
+WHERE {
+  ?country a dbo:Country ;
+           rdfs:label ?name ;
+           dct:subject ?continent .
+  OPTIONAL {
+    {
+      ?country dbo:language ?lang
+      } UNION {
+      ?country dbp:languages ?lang
+      } UNION {
+      ?country dbp:officialLanguages ?lang
+    }
+    ?lang rdfs:label ?langLabel .
+    FILTER(LANG(?langLabel) = "en")
+  }
+
+  FILTER(LANG(?name) = "en")
+  FILTER(REGEX(?name, "^A"))
+  FILTER(
+    ?continent IN (
+      dbr:Category:Countries_in_Europe,
+      dbr:Category:Countries_in_North_America
+    )
+  )
+}
+GROUP BY ?name
+ORDER BY ?name

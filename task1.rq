@@ -1,0 +1,51 @@
+# Перший варіант запиту, тут є Росія та Казахстан, а також у Грузії населення становить 36886474012104 осіб 🤔
+# PREFIX dbo: <http://dbpedia.org/ontology/>
+# PREFIX dbr: <http://dbpedia.org/resource/>
+# PREFIX dbc: <http://dbpedia.org/resource/Category:>
+# PREFIX dct: <http://purl.org/dc/terms/>
+# PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+# PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+# PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+#
+# SELECT DISTINCT ?country ?countryLabel ?population
+# WHERE {
+#   ?country dct:subject dbc:Eastern_European_countries ;
+#            rdf:type dbo:Country ;
+#            dbo:populationTotal ?population .
+#
+#   ?country rdfs:label ?countryLabel .
+#   FILTER(LANG(?countryLabel) = "en")
+#
+#   FILTER(DATATYPE(?population) = xsd:nonNegativeInteger)
+# }
+# ORDER BY DESC(?population)
+
+# Фінальний варіант запиту без Росії, Казахстану та Грузії
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbr: <http://dbpedia.org/resource/>
+PREFIX dbc: <http://dbpedia.org/resource/Category:>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT DISTINCT ?country ?countryLabel ?population
+WHERE {
+  { ?country dct:subject dbc:Eastern_European_countries . }
+  UNION
+  { ?country dct:subject dbc:Member_states_of_the_European_Union_in_Eastern_Europe . }
+
+  ?country rdf:type dbo:Country ;
+           dbo:populationTotal ?population .
+
+  ?country rdfs:label ?countryLabel .
+  FILTER(LANG(?countryLabel) = "en")
+
+  # Фільтр для реалістичних значень населення
+  FILTER(?population > 100000 && ?population < 150000000)
+  FILTER(DATATYPE(?population) = xsd:nonNegativeInteger)
+
+  # Виключаємо Росію та інші спірні випадки
+  FILTER(?country NOT IN (dbr:Russia, dbr:Kazakhstan))
+}
+ORDER BY DESC(?population)

@@ -1,0 +1,31 @@
+# Перший варіант запиту
+#PREFIX dbo: <http://dbpedia.org/ontology/>
+#PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+#PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+#PREFIX dct: <http://purl.org/dc/terms/>
+#PREFIX dbr: <http://dbpedia.org/resource/>
+#
+#SELECT DISTINCT ?name ?birthDate
+#WHERE {
+#    ?person rdf:type dbo:Scientist;
+#        rdfs:label ?name ;
+#        dbo:award dbr:Nobel_Prize_in_Physics ;
+#        dbo:birthDate ?birthDate .
+#    FILTER(LANG(?name) = "en")
+#}
+#ORDER BY ?birthDate
+
+# Фінальний (розширений) варіант запиту
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT DISTINCT ?name ?birthDate
+WHERE {
+    ?person dct:subject/skos:broader* <http://dbpedia.org/resource/Category:Nobel_laureates_in_Physics> ;
+            rdfs:label ?name ;
+            dbo:birthDate ?birthDate .
+    FILTER(LANG(?name) = "en")
+}
+ORDER BY ?birthDate

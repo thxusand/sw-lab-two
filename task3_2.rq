@@ -1,0 +1,38 @@
+# Перший варіант запиту
+#PREFIX dbo: <http://dbpedia.org/ontology/>
+#PREFIX dbp: <http://dbpedia.org/property/>
+#PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+#PREFIX dbr: <http://dbpedia.org/resource/>
+#
+#SELECT ?university (COUNT(DISTINCT ?person) as ?laureateCount)
+#WHERE {
+#    ?person rdf:type dbo:Scientist ;
+#            dbo:award dbr:Nobel_Prize_in_Physics ;
+#            dbo:almaMater ?university .
+#
+#    ?university rdf:type dbo:University .
+#}
+#GROUP BY ?university
+#ORDER BY DESC(?laureateCount)
+#LIMIT 10
+
+# Фінальний (покращений) варіант запиту
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbp: <http://dbpedia.org/property/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbr: <http://dbpedia.org/resource/>
+
+SELECT ?universityName (COUNT(DISTINCT ?person) as ?laureateCount)
+WHERE {
+    ?person rdf:type dbo:Scientist ;
+            dbo:award dbr:Nobel_Prize_in_Physics ;
+            dbo:almaMater ?university .
+
+    ?university rdf:type dbo:University ;
+            rdfs:label ?universityName .
+    FILTER(LANG(?universityName) = 'en')
+}
+GROUP BY ?universityName
+ORDER BY DESC(?laureateCount)
+LIMIT 10
